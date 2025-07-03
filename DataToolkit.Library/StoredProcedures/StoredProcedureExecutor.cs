@@ -5,14 +5,16 @@ using System.Data.Common;
 
 namespace DataToolkit.Library.StoredProcedures;
 
-public class StoredProcedureExecutor : IStoredProcedureExecutor
+public class StoredProcedureExecutor : IStoredProcedureExecutor, IDisposable
 {
     private readonly IDbConnection _connection;
     private readonly IDbTransaction? _transaction;
+    private bool _disposed;
 
     public StoredProcedureExecutor(IDbConnection connection, IDbTransaction? transaction = null)
     {
-        _connection = connection;
+        //_connection = connection;
+        _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         _transaction = transaction;
     }
 
@@ -62,5 +64,27 @@ public class StoredProcedureExecutor : IStoredProcedureExecutor
             AseCommand ase => new AseDataAdapter(ase),
             _ => throw new NotSupportedException("Comando no soportado.")
         };
+    }
+
+    // 🔒 Método Dispose público
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    // 🛡️ Método protegido para herencia segura (evita más de un llamado)
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _transaction?.Dispose();
+                _connection?.Dispose();
+            }
+
+            _disposed = true;
+        }
     }
 }

@@ -6,10 +6,11 @@ using System.Data;
 
 namespace DataToolkit.Library.UnitOfWorkLayer;
 
-public class UnitOfWork : IUnitOfWork
+public class UnitOfWork : IUnitOfWork, IDisposable
 {
     private readonly IDbConnection _connection;
     private IDbTransaction? _transaction;
+    private bool _disposed;
 
     private readonly Dictionary<Type, object> _repositories = new();
 
@@ -65,9 +66,25 @@ public class UnitOfWork : IUnitOfWork
         Sql = new SqlExecutor(_connection);
     }
 
+    // 🔒 Método Dispose público
     public void Dispose()
     {
-        _transaction?.Dispose();
-        _connection?.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
+
+    // 🛡️ Método protegido para herencia segura (evita más de un llamado)
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+
+        if (disposing)
+        {
+            _transaction?.Dispose();
+            _connection?.Dispose();
+        }
+
+        _disposed = true;
+    }
+
 }

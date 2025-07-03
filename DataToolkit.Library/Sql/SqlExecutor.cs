@@ -10,10 +10,11 @@ namespace DataToolkit.Library.Sql;
 /// proporcionando soporte para mapeo simple, múltiples resultados, interpolación segura
 /// y parámetros de salida en procedimientos almacenados.
 /// </summary>
-public class SqlExecutor
+public class SqlExecutor : IDisposable
 {
     private readonly IDbConnection _connection;
     private readonly IDbTransaction? _transaction;
+    private bool _disposed;
 
     /// <summary>
     /// Constructor principal del ejecutor SQL.
@@ -200,5 +201,17 @@ public class SqlExecutor
         }
 
         return (sql, dParams);
+    }
+
+    // ---------------------------------------------------------------------------
+    // IMPLEMENTACIÓN IDisposable
+    // ---------------------------------------------------------------------------
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            _connection?.Dispose();
+            _disposed = true;
+        }
     }
 }
